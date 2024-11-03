@@ -7,6 +7,46 @@ app = Flask(__name__)
 # URL de base de la page cible
 BASE_URL = "https://www.podcastfrancaisfacile.com/texte"
 
+# Route pour rechercher un texte spécifique
+@app.route('/recherche', methods=['GET'])
+def recherche():
+    # Récupération du titre depuis le paramètre de requête
+    titre = request.args.get('titre')
+    if not titre:
+        return jsonify({'error': 'Veuillez fournir un titre.'}), 400
+
+    # Construction de l'URL de la page à scraper
+    url = f'{BASE_URL}/{titre}.html'
+
+    try:
+        # Requête pour obtenir le contenu HTML de la page
+        response = requests.get(url)
+        response.encoding = 'utf-8'  # Assurez-vous que l'encodage est correct
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Extraction du texte principal
+        main_content = soup.find('div', class_='post-content')
+        if not main_content:
+            return jsonify({'error': "Le contenu principal n'a pas été trouvé."}), 404
+
+        # Extraction du texte
+        paragraphs = main_content.find_all('p')
+        texte = [para.get_text() for para in paragraphs]
+
+        # Extraction du vocabulaire si présent
+        vocab_section = main_content.find_all('strong')
+        vocabulaire = [vocab.get_text() for vocab in vocab_section]
+
+        return jsonify({
+            'titre': titre,
+            'texte': texte,
+            'vocabulaire': vocabulaire
+        })
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': f'Erreur de requête: {str(e)}'}), 500
+
+# Fonction pour récupérer les articles d'une page donnée avec numérotation
 def get_articles(page=1):
     # Construire l'URL pour la pagination
     url = f"{BASE_URL}/page/{page}" if page > 1 else BASE_URL
@@ -41,7 +81,7 @@ def get_articles(page=1):
 
     return articles_data
 
-# Route pour afficher tous les articles avec pagination
+# Route pour afficher tous les articles avec pagination et numérotation
 @app.route('/affiche', methods=['GET'])
 def affiche():
     # Récupérer le paramètre `page`
