@@ -40,24 +40,18 @@ def get_articles(page=1):
     
     return articles_data
 
-# Route pour effectuer la recherche avec pagination et texte fixe
-@app.route('/recherche', methods=['GET'])
-def recherche():
-    # Récupérer les paramètres `titre` et `page`
-    titre = request.args.get('titre', '')
+# Route pour afficher tous les articles avec pagination
+@app.route('/affiche', methods=['GET'])
+def affiche():
+    # Récupérer le paramètre `page`
     page = request.args.get('page', 1, type=int)
     
     # Extraire les articles pour la page demandée
     articles = get_articles(page=page)
 
-    # Filtrer les articles par le texte recherché s'il est spécifié
-    if titre:
-        articles = [a for a in articles if titre.lower() in a['article_text'].lower()]
-
     # Retourner les résultats en format JSON avec la pagination
     return jsonify({
         'page': page,
-        'search_text': titre,
         'articles': articles
     })
 
