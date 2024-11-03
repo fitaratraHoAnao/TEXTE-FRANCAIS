@@ -11,7 +11,8 @@ BASE_URL = "https://www.podcastfrancaisfacile.com/texte"
 def get_articles(page=1, search_text=None):
     # Construire l'URL de la page avec pagination
     url = f"{BASE_URL}/page/{page}" if page > 1 else BASE_URL
-    
+    print(f"Fetching URL: {url}")  # Debug: afficher l'URL utilisée
+
     response = requests.get(url)
     response.raise_for_status()
 
@@ -22,6 +23,8 @@ def get_articles(page=1, search_text=None):
 
     # Recherche de toutes les sections d'articles
     articles = soup.find_all('article')
+    print(f"Found {len(articles)} articles on page {page}")  # Debug: afficher le nombre d'articles trouvés
+
     for article in articles:
         # Récupération du texte complet de l'article
         article_text = article.get_text(separator="\n").strip()
@@ -39,7 +42,7 @@ def get_articles(page=1, search_text=None):
             'image_url': image_url,
             'article_text': article_text
         })
-    
+
     return articles_data
 
 # Route pour effectuer la recherche
